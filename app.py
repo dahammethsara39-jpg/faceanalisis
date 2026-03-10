@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
-import requests as http_requests
+import requests as req
 from aura_engine import analyse
 
 app = Flask(__name__)
@@ -9,9 +9,13 @@ CORS(app)
 BASE = os.path.dirname(os.path.abspath(__file__))
 
 def generate_aura_description(scores):
-    """Call Cerebras API directly via HTTP."""
     api_key = os.environ.get("CEREBRAS_API_KEY", "")
+    
+    # Debug: print if key exists
+    print(f"[DEBUG] API key found: {'YES' if api_key else 'NO'}")
+    
     if not api_key:
+        print("[DEBUG] No API key - skipping AI")
         return None
 
     symmetry = scores["Face Symmetry"]
@@ -19,19 +23,20 @@ def generate_aura_description(scores):
     eyes     = scores["Eye Intensity"]
     jaw      = scores["Jawline"]
 
-    prompt = f"""You are a brutally honest but kind face analyst. Analyse these real facial measurement scores and give a 2-3 sentence honest reading about what these scores mean about this person's actual face features. Then give 2 very specific tips to improve the score. Talk about the FACE not about lighting or cameras.
+    prompt = f"""You are a brutally honest but kind face analyst. Based on these real facial measurement scores, write 2-3 sentences about what the scores reveal about this person's actual face. Then give 2 specific tips to improve. Talk about the FACE FEATURES only.
 
-Face Symmetry: {symmetry}/100 (how balanced left and right side of face is)
-Skin Glow: {glow}/100 (skin clarity and brightness)
-Eye Intensity: {eyes}/100 (eye openness and contrast)
-Jawline Definition: {jaw}/100 (sharpness of jaw and chin)
+Face Symmetry: {symmetry}/100
+Skin Glow: {glow}/100
+Eye Intensity: {eyes}/100
+Jawline: {jaw}/100
 
-Respond EXACTLY in this format:
-READING: [2-3 sentences about their actual face based on scores]
-TIPS: [Tip 1]. [Tip 2]."""
+Reply EXACTLY like this:
+READING: [your honest reading here]
+TIPS: [tip 1]. [tip 2]."""
 
     try:
-        response = http_requests.post(
+        print("[DEBUG] Calling Cerebras API...")
+        response = req.post(
             "https://api.cerebras.ai/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {api_key}",
@@ -42,18 +47,23 @@ TIPS: [Tip 1]. [Tip 2]."""
                 "max_tokens": 250,
                 "messages": [{"role": "user", "content": prompt}]
             },
-            timeout=15
+            timeout=20
         )
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+        print(f"[DEBUG] Response status: {response.status_code}")
+        print(f"[DEBUG] Response body: {response.text[:300]}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+        else:
+            print(f"[DEBUG] API error: {response.text}")
+            return None
     except Exception as e:
-        print(f"Cerebras error: {e}")
+        print(f"[DEBUG] Exception: {str(e)}")
         return None
 
 def parse_ai_response(text):
-    """Parse READING and TIPS from AI response."""
-    reading = ""
-    tips    = ""
+    reading, tips = "", ""
     if not text:
         return reading, tips
     for line in text.strip().split("\n"):
@@ -62,7 +72,6 @@ def parse_ai_response(text):
             reading = line.replace("READING:", "").strip()
         elif line.startswith("TIPS:"):
             tips = line.replace("TIPS:", "").strip()
-    # fallback if format slightly off
     if not reading and text:
         reading = text[:300]
     return reading, tips
@@ -87,13 +96,10 @@ def analyze():
     if "error" in result_data:
         return jsonify(result_data), 422
 
-    # Generate AI description
     ai_text = generate_aura_description(result_data["metrics"])
     reading, tips = parse_ai_response(ai_text)
-
     result_data["reading"] = reading
     result_data["tips"]    = tips
-
     return jsonify(result_data)
 
 @app.route('/health')
