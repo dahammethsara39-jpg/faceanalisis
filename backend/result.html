@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Your Aura — Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold:      #c9a84c;
+    --gold-lt:   #e8c97a;
+    --gold-dim:  rgba(201,168,76,0.15);
+    --bg:        #080808;
+    --bg2:       #111111;
+    --border:    rgba(201,168,76,0.18);
+    --text:      #f0ede8;
+    --muted:     #666;
+  }
+
+  html, body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 52px 20px 80px;
+  }
+
+  /* ── Logo ── */
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 56px;
+  }
+
+  /* ── Main result card ── */
+  .result-card {
+    width: 100%;
+    max-width: 520px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 48px 44px;
+    backdrop-filter: blur(16px);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.7s ease 0.1s forwards;
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Top section: photo + score ── */
+  .top-section {
+    display: flex;
+    gap: 36px;
+    align-items: center;
+    margin-bottom: 48px;
+  }
+
+  /* ── Aura glow photo ring ── */
+  .photo-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 130px;
+    height: 130px;
+  }
+
+  /* Rotating gradient ring */
+  .photo-ring {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      var(--gold) 60deg,
+      var(--gold-lt) 120deg,
+      transparent 180deg,
+      var(--gold) 240deg,
+      var(--gold-lt) 300deg,
+      transparent 360deg
+    );
+    animation: rotatering 4s linear infinite;
+    opacity: 0;
+    animation: rotatering 4s linear infinite, ringFadeIn 1.2s ease 0.6s forwards;
+  }
+
+  @keyframes rotatering {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes ringFadeIn {
+    to { opacity: 1; }
+  }
+
+  /* Pulsing glow behind ring */
+  .photo-glow {
+    position: absolute;
+    inset: -18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.22) 0%, transparent 70%);
+    animation: pulseGlow 2.5s ease-in-out infinite;
+    opacity: 0;
+    animation: pulseGlow 2.5s ease-in-out infinite, glowFadeIn 1s ease 1s forwards;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { transform: scale(1);    opacity: 0.7; }
+    50%       { transform: scale(1.12); opacity: 1;   }
+  }
+
+  @keyframes glowFadeIn {
+    to { opacity: 1; }
+  }
+
+  /* Inner mask (hides ring corners, shows circle) */
+  .photo-mask {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--bg);
+    z-index: 1;
+  }
+
+  .photo-mask img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ── Score section ── */
+  .score-section {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .score-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 5rem;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--gold);
+    letter-spacing: -0.02em;
+  }
+
+  .score-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 6px 0 12px;
+  }
+
+  .tier-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .tier-icon {
+    font-size: 1.2rem;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin-bottom: 36px;
+  }
+
+  /* ── Metrics ── */
+  .metrics-title {
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .metric-row {
+    margin-bottom: 22px;
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  /* Stagger metric animations */
+  .metric-row:nth-child(1) { animation: slideIn 0.5s ease 0.8s  forwards; }
+  .metric-row:nth-child(2) { animation: slideIn 0.5s ease 1.0s  forwards; }
+  .metric-row:nth-child(3) { animation: slideIn 0.5s ease 1.2s  forwards; }
+  .metric-row:nth-child(4) { animation: slideIn 0.5s ease 1.4s  forwards; }
+
+  @keyframes slideIn {
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .metric-name {
+    font-size: 0.82rem;
+    color: rgba(240,237,232,0.7);
+    letter-spacing: 0.03em;
+  }
+
+  .metric-pct {
+    font-size: 0.82rem;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Bar track */
+  .bar-track {
+    height: 2px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  /* Bar fill – width is set dynamically via JS */
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 1px;
+    background: linear-gradient(to right, var(--gold), var(--gold-lt));
+    transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* ── Actions ── */
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 40px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 2px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: #080808;
+    border: none;
+    font-weight: 500;
+  }
+
+  .btn-primary:hover { background: var(--gold-lt); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid rgba(255,255,255,0.08);
+    text-decoration: none;
+  }
+
+  .btn-ghost:hover { border-color: var(--border); color: var(--text); }
+
+  /* ── Share / copy toast ── */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(201,168,76,0.15);
+    border: 1px solid var(--border);
+    padding: 10px 24px;
+    border-radius: 2px;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 520px) {
+    .result-card { padding: 32px 24px; }
+    .top-section  { flex-direction: column; align-items: flex-start; gap: 28px; }
+    .score-number { font-size: 4rem; }
+    .photo-wrap   { width: 110px; height: 110px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="logo">✦ Aura Check</div>
+
+  <div class="result-card" id="result-card">
+
+    <!-- Top: Photo + Score -->
+    <div class="top-section">
+
+      <!-- Glowing photo -->
+      <div class="photo-wrap">
+        <div class="photo-glow"></div>
+        <div class="photo-ring"></div>
+        <div class="photo-mask">
+          <img id="result-photo" src="" alt="Your photo"/>
+        </div>
+      </div>
+
+      <!-- Score -->
+      <div class="score-section">
+        <div class="score-number" id="score-number">0</div>
+        <div class="score-label">Aura Score</div>
+        <div class="tier-name" id="tier-name">—</div>
+        <div class="tier-icon" id="tier-icon"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Metrics breakdown -->
+    <div class="metrics-title">Breakdown</div>
+
+    <div id="metrics-list">
+      <!-- Injected by JS -->
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn btn-primary" id="share-btn">Share Result</button>
+      <a href="/" class="btn btn-ghost">Try Again</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+// ── Load data from sessionStorage ────────────────────────────────────────────
+const data  = JSON.parse(sessionStorage.getItem('aura_result') || 'null');
+const photo = sessionStorage.getItem('aura_photo');
+
+if (!data) {
+  // No result found — redirect back to upload
+  window.location.href = '/';
+}
+
+// ── Set photo ─────────────────────────────────────────────────────────────────
+const photoEl = document.getElementById('result-photo');
+if (photo) photoEl.src = photo;
+else photoEl.src = '';
+
+// ── Animate count-up score number ─────────────────────────────────────────────
+const scoreEl   = document.getElementById('score-number');
+const tierName  = document.getElementById('tier-name');
+const tierIcon  = document.getElementById('tier-icon');
+const targetScore = data.total;
+
+let current = 0;
+const duration = 1800; // ms
+const start = performance.now();
+
+function animateScore(ts) {
+  const elapsed  = ts - start;
+  const progress = Math.min(elapsed / duration, 1);
+  // Ease out cubic
+  const eased = 1 - Math.pow(1 - progress, 3);
+  current = Math.round(eased * targetScore);
+  scoreEl.textContent = current;
+  if (progress < 1) requestAnimationFrame(animateScore);
+  else {
+    scoreEl.textContent = targetScore;
+    tierName.textContent = data.tier;
+    tierIcon.textContent = data.icon;
+  }
+}
+
+// Slight delay before starting count
+setTimeout(() => requestAnimationFrame(animateScore), 500);
+
+// ── Build metric bars ─────────────────────────────────────────────────────────
+const metricsList = document.getElementById('metrics-list');
+const metrics     = data.metrics;
+
+Object.entries(metrics).forEach(([name, score], i) => {
+  const pct = Math.round(score);
+
+  const row = document.createElement('div');
+  row.className = 'metric-row';
+  row.innerHTML = `
+    <div class="metric-header">
+      <span class="metric-name">${name}</span>
+      <span class="metric-pct" id="pct-${i}">0%</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="bar-${i}"></div>
+    </div>
+  `;
+  metricsList.appendChild(row);
+
+  // Animate bar fill after stagger delay matches CSS animation
+  const delay = 800 + (i * 200) + 400; // ms
+
+  setTimeout(() => {
+    document.getElementById(`bar-${i}`).style.width = pct + '%';
+    // Animate percentage number
+    let c = 0;
+    const t = performance.now();
+    const pctEl = document.getElementById(`pct-${i}`);
+
+    function animatePct(ts) {
+      const prog = Math.min((ts - t) / 1000, 1);
+      const e    = 1 - Math.pow(1 - prog, 3);
+      c = Math.round(e * pct);
+      pctEl.textContent = c + '%';
+      if (prog < 1) requestAnimationFrame(animatePct);
+      else pctEl.textContent = pct + '%';
+    }
+    requestAnimationFrame(animatePct);
+  }, delay);
+});
+
+// ── Share button ──────────────────────────────────────────────────────────────
+document.getElementById('share-btn').addEventListener('click', () => {
+  const text = `✦ My Aura Score: ${data.total}/100 — ${data.tier} ${data.icon}\n` +
+    Object.entries(data.metrics)
+      .map(([k,v]) => `${k}: ${Math.round(v)}%`)
+      .join(' · ') +
+    '\n\nCheck yours at aura-check.onrender.com';
+
+  if (navigator.share) {
+    navigator.share({ title: 'My Aura Score', text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard ✦'));
+  }
+});
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
